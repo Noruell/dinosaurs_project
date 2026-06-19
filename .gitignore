@@ -12,3 +12,7 @@ venv/
 .vscode/
 .idea/
 *.log
+static/images/*.jpg
+static/images/*.jpeg
+static/images/*.png
+static/images/*.webp
