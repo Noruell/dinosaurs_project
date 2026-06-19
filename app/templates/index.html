@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕 Динозаврики 🦕</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #ffafc6;
+            padding: 30px;
+            color: #1e2a3a;
+        }
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            margin: 20px 0 30px;
+            align-items: center;
+            background: #96ffbd;
+            padding: 20px 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .controls input, .controls select, .controls button {
+            padding: 8px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .controls button {
+            background: #97d361 ;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            padding: 8px 20px;
+        }
+        .controls button:hover {
+            background: #ABD97E;
+        }
+        .form-card {
+            background: #96ffbd;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 16px;
+            align-items: end;
+            
+
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+            transform-origin: top center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            height: 0;
+            padding: 0 24px;
+            margin-bottom: 0;
+            overflow: hidden;
+        }
+        .form-card.open {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+            height: auto;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+            /* display: flex; */
+        }
+        .form-card label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-card input {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 120px;
+        }
+        .form-card button {
+            background: #9FD966;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 8px;
+        }
+        .form-card button:hover {
+            background: #ABD97E;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #a9fcc8;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            animation: fadeUp 0.3 ease;
+            overflow: hidden;
+            height: 100%;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+        
+        .card img {
+            width: 100%;
+            min-height: 100px;
+            height: auto;
+            object-fit: contain;
+            object-position: center;
+            border-radius: 10px;
+            background: #4c6b57;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .card h3 {
+            font-size: 1.2rem;
+        }
+        .card p {
+            font-size: 0.9rem;
+            color: #3d4f63;
+            margin: 4px 0;
+            margin-top: auto;
+        }
+        .card-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .card-actions button {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background: #f0c94b;
+            color: #1e2a3a;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn-edit:hover {
+            background: #e0b830;
+            transform: scale(1.05);
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-delete:hover{
+            background: #d43726;
+            transform: scale(1.05);
+        }
+        .btn-image {
+            background: #3498db;
+            color: white;
+        }
+        .btn-image:hover{
+            background: #1c80c4;
+            transform: scale(1.05);
+        }
+        .hidden {
+            display: none;
+        }
+        #uploadForm {
+            margin-top: 8px;
+        }
+        #uploadForm input {
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🦕 Динозавры</h1>
+
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="🔍 Поиск по имени" />
+        <input type="text" id="periodFilter" placeholder="📅 Период (Меловой...)" />
+        <button id="searchBtn">Найти</button>
+        <button id="resetBtn">Сбросить</button>
+        <button id="showFormBtn">➕ Добавить</button>
+    </div>
+
+    <div class="form-card" id="formCard">
+        <label>Имя <input id="fName" placeholder="Теризинозавр" /></label>
+        <label>Период <input id="fPeriod" placeholder="Меловой" /></label>
+        <label>Длина min (м)<input id="fLMin" placeholder="5" /></label>
+        <label>Длина max (м)<input id="fLMax" placeholder="12" /></label>
+        <label>Вес min (кг) <input id="fWMin" placeholder="500" /></label>
+        <label>Вес max (кг)<input id="fWMax" placeholder="2000" /></label>
+        <button id="saveBtn">💾 Сохранить</button>
+        <button id="cancelFormBtn">Отмена</button>
+    </div>
+
+    <div class="grid" id="dinoGrid"></div>
+</div>
+
+<script>
+    const API = "http://localhost:8000/dinosaurs";
+
+    let editingId = null;
+
+    const grid = document.getElementById('dinoGrid');
+    const searchInput = document.getElementById('searchInput');
+    const periodFilter = document.getElementById('periodFilter');
+    const searchBtn = document.getElementById('searchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const showFormBtn = document.getElementById('showFormBtn');
+    const cancelFormBtn = document.getElementById('cancelFormBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const formCard = document.getElementById('formCard');
+
+    const fName = document.getElementById('fName');
+    const fPeriod = document.getElementById('fPeriod');
+    const fLMin = document.getElementById('fLMin');
+    const fLMax = document.getElementById('fLMax');
+    const fWMin = document.getElementById('fWMin');
+    const fWMax = document.getElementById('fWMax');
+
+    async function loadDinos(url = API) {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Ошибка загрузки');
+            const data = await res.json();
+            renderDinos(data);
+        } catch (e) {
+            grid.innerHTML = '<p>⚠️ Не удалось загрузить динозавриков</p>';
+        }
+    }
+
+    function renderDinos(dinos) {
+        console.log("📦 Данные с сервера:", dinos);  // <-- посмотри в консоли браузера
+
+        if (!dinos.length) {
+            grid.innerHTML = '<p>🦕 Ничего не найдено</p>';
+            return;
+        }
+        grid.innerHTML = dinos.map(d => `
+            <div class="card">
+                <img src="${d.image_url || 'https://via.placeholder.com/300x150?text=🦕'}" alt="${d.name}" />
+                <h3>${d.name}</h3>
+                <p>📅 ${d.period || '—'}</p>
+                <p>📏 ${d.length_min || '?'} — ${d.length_max || '?'} м</p>
+                <p>⚖️ ${d.weight_min || '?'} — ${d.weight_max || '?'} кг</p>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="editDino(${d.id})">✏️</button>
+                    <button class="btn-delete" onclick="deleteDino(${d.id})">🗑️</button>
+                    <button class="btn-image" onclick="uploadImage(${d.id})">🖼️</button>
+                </div>
+                <div id="upload-${d.id}" style="margin-top:6px;display:none;">
+                    <input type="file" accept="image/*" onchange="uploadFile(${d.id}, this)" />
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function editDino(id) {
+        editingId = id;
+        fetch(`${API}/${id}`)
+            .then(r => r.json())
+            .then(d => {
+                fName.value = d.name || '';
+                fPeriod.value = d.period || '';
+                fLMin.value = d.length_min || '';
+                fLMax.value = d.length_max || '';
+                fWMin.value = d.weight_min || '';
+                fWMax.value = d.weight_max || '';
+                formCard.classList.add('open');
+                showFormBtn.textContent = '✏️ Редактировать';
+            });
+    }
+
+    async function deleteDino(id) {
+        if (!confirm('Удалить динозавра?')) return;
+        await fetch(`${API}/${id}`, { method: 'DELETE' });
+        loadDinos();
+    }
+
+    function uploadImage(id) {
+        const el = document.getElementById(`upload-${id}`);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function uploadFile(id, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        await fetch(`${API}/${id}/image`, { method: 'POST', body: formData });
+        loadDinos();
+    }
+
+    async function saveDino() {
+        const payload = {
+            name: fName.value,
+            period: fPeriod.value || null,
+            length_min: parseFloat(fLMin.value) || null,
+            length_max: parseFloat(fLMax.value) || null,
+            weight_min: parseFloat(fWMin.value) || null,
+            weight_max: parseFloat(fWMax.value) || null,
+        };
+
+        const url = editingId ? `${API}/${editingId}` : API;
+        const method = editingId ? 'PUT' : 'POST';
+
+        await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        resetForm();
+        loadDinos();
+    }
+
+    function resetForm() {
+        editingId = null;
+        fName.value = '';
+        fPeriod.value = '';
+        fLMin.value = '';
+        fLMax.value = '';
+        fWMin.value = '';
+        fWMax.value = '';
+        formCard.classList.remove('open');
+        showFormBtn.textContent = '➕ Добавить';
+    }
+
+    function applyFilters() {
+        const search = searchInput.value.trim();
+        const period = periodFilter.value.trim();
+        let url = API;
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (period) params.append('period', period);
+        if (params.toString()) url += '/search?' + params.toString();
+        loadDinos(url);
+    }
+
+    searchBtn.addEventListener('click', applyFilters);
+    resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        periodFilter.value = '';
+        loadDinos();
+    });
+
+    showFormBtn.addEventListener('click', () => {
+        if (formCard.classList.contains('open')) {
+            resetForm();
+        } else {
+            resetForm();
+            formCard.classList.add('open');
+        }
+    });
+
+    cancelFormBtn.addEventListener('click', resetForm);
+    saveBtn.addEventListener('click', saveDino);
+
+    loadDinos();
+</script>
+</body>
+</html>
