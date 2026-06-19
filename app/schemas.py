@@ -27,6 +27,7 @@ class DinosaurUpdate(DinosaurBase):
 # Для ответа (есть id)
 class DinosaurOut(DinosaurBase):
     id: int
+    name: str
 
     class Config:
         from_attributes = True
