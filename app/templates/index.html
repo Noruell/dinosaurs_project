@@ -336,6 +336,10 @@
     }
 
     async function saveDino() {
+        if (!fName.value.trim()) {
+            alert("⚠️ Имя обязательно");
+            return;
+}
         const payload = {
             name: fName.value,
             period: fPeriod.value || null,
