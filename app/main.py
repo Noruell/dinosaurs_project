@@ -47,6 +47,10 @@ async def root():
     with open(html_path, "r", encoding="utf-8") as f:
         return HTMLResponse(f.read())
 
+@app.get("/ping")
+async def ping():
+    return {"status": "ok"}
+
 # Поиск по имени (частичное совпадение)
 @app.get("/dinosaurs/search")
 async def search_dinosaur(
