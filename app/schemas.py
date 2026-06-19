@@ -1,8 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Базовый класс с общими полями
 class DinosaurBase(BaseModel):
-    name: str 
     period: str | None = None
     length_min: float | None = None
     length_max: float | None = None
@@ -12,6 +11,7 @@ class DinosaurBase(BaseModel):
 
 # Для создания
 class DinosaurCreate(DinosaurBase):
+    name: str = Field(..., min_length=1, description="Имя обязательно")
     pass
 
 # Для обновления, все поля опциональны
