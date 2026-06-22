@@ -97,6 +97,18 @@
             border-radius: 6px;
             width: 120px;
         }
+        .form-card:invalid {
+            color: #ccc;
+        }
+        .form-card select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 120px;
+        }
+        .form-card select[disabled][hidden] {
+            display: none;
+        }
         .form-card button {
             background: #9FD966;
             color: white;
@@ -213,6 +225,36 @@
         #uploadForm input {
             font-size: 0.8rem;
         }
+        .latin-name {
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+            margin: 2px 0;
+        }
+        .description {
+            font-size: 0.85rem;
+            color: #3d4f63;
+            margin: 6px 0;
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+        }
+        .diet {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin: 2px 0;
+        }
+
+        .diet-хищник {
+            color: #e74c3c;
+        }
+        .diet-травоядный {
+            color: #27ae60;
+        }
+        .diet-всеядный {
+            color: #f39c12;
+        }
     </style>
 </head>
 <body>
@@ -234,6 +276,15 @@
 
     <div class="form-card" id="formCard">
         <label>Имя <input id="fName" placeholder="Теризинозавр" /></label>
+        <label>Латинсок имя <input id="fLatin_name" placeholder="Therizinosaurus" /></label>
+        <label>Диета 
+            <select id="fDiet">
+                <option value="" disabled selected hidden>Диета</option>
+                <option value="Травоядный">Травоядный</option>
+                <option value="Хищник">Хищник</option>
+                <option value="Всеядный">Всеядный</option>
+            </select>
+        </label>
         <label>Период <input id="fPeriod" placeholder="Меловой" /></label>
         <label>Длина min (м)<input id="fLMin" placeholder="5" /></label>
         <label>Длина max (м)<input id="fLMax" placeholder="12" /></label>
@@ -262,6 +313,8 @@
     const formCard = document.getElementById('formCard');
 
     const fName = document.getElementById('fName');
+    const fLatin_name = document.getElementById('fLatin_name');
+    const fDiet = document.getElementById('fDiet');
     const fPeriod = document.getElementById('fPeriod');
     const fLMin = document.getElementById('fLMin');
     const fLMax = document.getElementById('fLMax');
@@ -290,6 +343,8 @@
             <div class="card">
                 <img src="${d.image_url || 'https://via.placeholder.com/300x150?text=🦕'}" alt="${d.name}" />
                 <h3>${d.name}</h3>
+                ${d.latin_name ? `<p class="latin-name">${d.latin_name}</p>` : ''}
+                ${d.diet ? `<p class="diet diet-${d.diet}">🍽️ ${d.diet}</p>` : ''}
                 <p>📅 ${d.period || '—'}</p>
                 <p>📏 ${d.length_min || '?'} — ${d.length_max || '?'} м</p>
                 <p>⚖️ ${d.weight_min || '?'} — ${d.weight_max || '?'} кг</p>
@@ -311,6 +366,8 @@
             .then(r => r.json())
             .then(d => {
                 fName.value = d.name || '';
+                fLatin_name.value = d.latin_name || '';
+                fDiet.value = d.diet || '';
                 fPeriod.value = d.period || '';
                 fLMin.value = d.length_min || '';
                 fLMax.value = d.length_max || '';
@@ -348,6 +405,8 @@
 }
         const payload = {
             name: fName.value,
+            latin_name: fLatin_name.value || null,
+            diet: fDiet.value || null,
             period: fPeriod.value || null,
             length_min: parseFloat(fLMin.value) || null,
             length_max: parseFloat(fLMax.value) || null,
@@ -371,6 +430,8 @@
     function resetForm() {
         editingId = null;
         fName.value = '';
+        fLatin_name.value = '';
+        fDiet.value = '';
         fPeriod.value = '';
         fLMin.value = '';
         fLMax.value = '';

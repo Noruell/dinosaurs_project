@@ -8,6 +8,9 @@ class DinosaurBase(BaseModel):
     weight_min: float | None = None
     weight_max: float | None = None
     image_url: str | None = None
+    latin_name: str | None = None
+    diet: str | None = None
+    description: str | None = None
 
 # Для создания
 class DinosaurCreate(DinosaurBase):
@@ -23,6 +26,9 @@ class DinosaurUpdate(DinosaurBase):
     weight_min: float | None = None
     weight_max: float | None = None
     image_url: str | None = None
+    latin_name: str | None = None
+    diet: str | None = None
+    description: str | None = None
 
 # Для ответа (есть id)
 class DinosaurOut(DinosaurBase):

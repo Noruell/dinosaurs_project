@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime  # ← DateTime, а не DATETIME
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text  # ← DateTime, а не DATETIME
 from app.database import Base
 from sqlalchemy.sql import func
 
@@ -12,5 +12,8 @@ class Dinosaur(Base):
     weight_min = Column(Float)
     weight_max = Column(Float)
     image_url = Column(String(255))
+    latin_name = Column(String(100))
+    diet = Column(String(50))
+    description = Column(Text)
     created_at = Column(DateTime, server_default=func.now())  # ← DateTime
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

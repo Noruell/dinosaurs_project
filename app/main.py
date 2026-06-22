@@ -91,7 +91,10 @@ async def search_dinosaur(
         "length_max": row[4],
         "weight_min": row[5],
         "weight_max": row[6],
-        "image_url": row[7]
+        "image_url": row[7],
+        "latin_name": row[8],
+        "diet": row[9],
+        "description": row[10]
     }
     for row in rows
     ]
@@ -147,7 +150,10 @@ async def filter_dinosaurs(
         "length_max": row[4],
         "weight_min": row[5],
         "weight_max": row[6],
-        "image_url": row[7]
+        "image_url": row[7],
+        "latin_name": row[8],
+        "diet": row[9],
+        "description": row[10]
     }
     for row in rows
     ]
@@ -170,13 +176,20 @@ async def get_dinosaur_by_id(id: int, db: AsyncSession = Depends(get_db)):
         "length_max": row[4],
         "weight_min": row[5],
         "weight_max": row[6],
-        "image_url": row[7]
+        "image_url": row[7],
+        "latin_name": row[8],
+        "diet": row[9],
+        "description": row[10]
     }
 
 # Получить всех динозавров с БД
 @app.get("/dinosaurs", response_model=List[DinosaurOut])
 async def get_all_dinosaurs(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("SELECT * FROM dinosaurs"))
+    result = await db.execute(text("""
+        SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+               image_url, latin_name, diet, description, created_at, updated_at
+        FROM dinosaurs
+    """))
     rows = result.fetchall()
     return [
         {
@@ -187,7 +200,10 @@ async def get_all_dinosaurs(db: AsyncSession = Depends(get_db)):
             "length_max": row[4],
             "weight_min": row[5],
             "weight_max": row[6],
-            "image_url": row[7]
+            "image_url": row[7],
+            "latin_name": row[8],
+            "diet": row[9],
+            "description": row[10]
         }
         for row in rows
     ]
@@ -205,7 +221,10 @@ async def create_dinosaur(
         length_max=dinosaur.length_max,
         weight_min=dinosaur.weight_min,
         weight_max=dinosaur.weight_max,
-        image_url=dinosaur.image_url
+        image_url=dinosaur.image_url,
+        latin_name=dinosaur.latin_name,
+        diet=dinosaur.diet,
+        description=dinosaur.description
     )
     db.add(new_dino)
     await db.commit()
@@ -246,7 +265,10 @@ async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Dep
         "length_max": row[4],
         "weight_min": row[5],
         "weight_max": row[6],
-        "image_url": row[7]
+        "image_url": row[7],
+        "latin_name": row[8],
+        "diet": row[9],
+        "description": row[10]
     }
 
 # Удалить динозавра
