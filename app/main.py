@@ -61,7 +61,8 @@ async def search_dinosaur(
     offset: int = 0
     ):
     
-    query = "SELECT * FROM dinosaurs WHERE 1=1"
+    query = """SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+    image_url, latin_name, diet, description, created_at, updated_at FROM dinosaurs WHERE 1=1"""
     params = {}
     
     if search:
@@ -112,7 +113,8 @@ async def filter_dinosaurs(
     offset: int = 0
     ):
 
-    query = "SELECT * FROM dinosaurs WHERE 1=1"
+    query = """SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+    image_url, latin_name, diet, description, created_at, updated_at FROM dinosaurs WHERE 1=1"""
     params = {}
 
     if period:
@@ -162,7 +164,9 @@ async def filter_dinosaurs(
 @app.get("/dinosaurs/{id}")
 async def get_dinosaur_by_id(id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(text
-                              ("SELECT * FROM dinosaurs WHERE id = :id"),
+                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+                               image_url, latin_name, diet, description, created_at, updated_at 
+                               FROM dinosaurs WHERE id = :id"""),
                               {"id": id}
                               )
     row = result.fetchone()
@@ -236,7 +240,9 @@ async def create_dinosaur(
 @app.put("/dinosaurs/{id}")
 async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(text
-                              ("SELECT * FROM dinosaurs WHERE id = :id"),
+                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+                               image_url, latin_name, diet, description, created_at, updated_at 
+                               FROM dinosaurs WHERE id = :id"""),
                               {"id": id}
                               )
     row = result.fetchone()
@@ -253,11 +259,14 @@ async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Dep
         await db.commit()
 
     result = await db.execute(text
-                              ("SELECT * FROM dinosaurs WHERE id = :id"),
+                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+                               image_url, latin_name, diet, description, created_at, updated_at 
+                               FROM dinosaurs WHERE id = :id"""),
                               {"id": id}
                               )
-    row = result.fetchone()
+    rows = result.fetchone()
     return {
+        {
         "id": row[0],
         "name": row[1],
         "period": row[2],
@@ -268,9 +277,12 @@ async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Dep
         "image_url": row[7],
         "latin_name": row[8],
         "diet": row[9],
-        "description": row[10]
+        "description": row[10],
+        "created_at": row[11],
+        "updated_at": row[12]
+        }
+        for row in rows
     }
-
 # Удалить динозавра
 @app.delete("/dinosaurs/{id}")
 async def delete_dinosaur(id: int, db: AsyncSession = Depends(get_db)):
@@ -284,9 +296,11 @@ async def delete_dinosaur(id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Динозавр не найден")
     
     await db.execute(text
-                     ("DELETE FROM dinosaurs WHERE id = :id"),
-                     {"id": id}
-                     )
+                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+                               image_url, latin_name, diet, description, created_at, updated_at 
+                               FROM dinosaurs WHERE id = :id"""),
+                              {"id": id}
+                              )
     await db.commit()
 
     return {
@@ -303,9 +317,11 @@ async def upload_dinosaur_image(
     ):
     
     result = await db.execute(text
-                        ("SELECT * FROM dinosaurs WHERE id = :id"),
-                        {"id": id}
-                        )
+                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+                               image_url, latin_name, diet, description, created_at, updated_at 
+                               FROM dinosaurs WHERE id = :id"""),
+                              {"id": id}
+                              )
     row = result.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Динозавр не найден")
