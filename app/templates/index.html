@@ -97,6 +97,16 @@
             border-radius: 6px;
             width: 120px;
         }
+        .form-card textarea {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 250px;
+            min-height: 60px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
         .form-card:invalid {
             color: #ccc;
         }
@@ -216,6 +226,14 @@
             background: #1c80c4;
             transform: scale(1.05);
         }
+        .btn-view {
+            background: #8e44ad;
+            color: white;
+        }
+        .btn-view:hover{
+            background: #6c3483;
+            transform: scale(1.05);
+        }
         .hidden {
             display: none;
         }
@@ -238,6 +256,9 @@
             line-height: 1.4;
             max-height: 60px;
             overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
         .diet {
             font-size: 0.9rem;
@@ -254,6 +275,115 @@
         }
         .diet-всеядный {
             color: #f39c12;
+        }
+
+        /* Модальное окно */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 550px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #999;
+            transition: 0.2s;
+            padding: 0 8px;
+        }
+        .modal-close:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .modal-body img {
+            width: 100%;
+            border-radius: 12px;
+            max-height: 300px;
+            object-fit: contain;
+            background: #f0f0f0;
+            margin-bottom: 12px;
+        }
+        .modal-body p {
+            margin: 6px 0;
+            font-size: 1rem;
+        }
+        .modal-body .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .modal-body .modal-description {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 8px;
+            line-height: 1.6;
+            color: #2c3e50;
+            border-left: 4px solid #97d361;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-footer button {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .modal-footer .btn-close-modal {
+            background: #e74c3c;
+            color: white;
+        }
+        .modal-footer .btn-close-modal:hover {
+            background: #d43726;
         }
     </style>
 </head>
@@ -276,7 +406,7 @@
 
     <div class="form-card" id="formCard">
         <label>Имя <input id="fName" placeholder="Теризинозавр" /></label>
-        <label>Латинсок имя <input id="fLatin_name" placeholder="Therizinosaurus" /></label>
+        <label>Латинское имя <input id="fLatin_name" placeholder="Therizinosaurus" /></label>
         <label>Диета 
             <select id="fDiet">
                 <option value="" disabled selected hidden>Диета</option>
@@ -290,11 +420,36 @@
         <label>Длина max (м)<input id="fLMax" placeholder="12" /></label>
         <label>Вес min (кг) <input id="fWMin" placeholder="500" /></label>
         <label>Вес max (кг)<input id="fWMax" placeholder="2000" /></label>
+        <label style="flex: 1 1 100%;">Описание 
+            <textarea id="fDescription" placeholder="Введите описание динозавра..." style="width:100%;max-width:400px;"></textarea>
+        </label>
         <button id="saveBtn">💾 Сохранить</button>
         <button id="cancelFormBtn">Отмена</button>
     </div>
 
     <div class="grid" id="dinoGrid"></div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modalTitle">Динозавр</h2>
+            <button class="modal-close" id="modalCloseBtn">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <img id="modalImage" src="" alt="Динозавр" />
+            <p><span class="detail-label">Латинское имя:</span> <span id="modalLatin"></span></p>
+            <p><span class="detail-label">Диета:</span> <span id="modalDiet"></span></p>
+            <p><span class="detail-label">Период:</span> <span id="modalPeriod"></span></p>
+            <p><span class="detail-label">Длина:</span> <span id="modalLength"></span></p>
+            <p><span class="detail-label">Вес:</span> <span id="modalWeight"></span></p>
+            <div class="modal-description" id="modalDescription"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-close-modal" id="modalCloseBtn2">Закрыть</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -320,6 +475,20 @@
     const fLMax = document.getElementById('fLMax');
     const fWMin = document.getElementById('fWMin');
     const fWMax = document.getElementById('fWMax');
+    const fDescription = document.getElementById('fDescription');
+
+    // Элементы модального окна
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalCloseBtn2 = document.getElementById('modalCloseBtn2');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalImage = document.getElementById('modalImage');
+    const modalLatin = document.getElementById('modalLatin');
+    const modalDiet = document.getElementById('modalDiet');
+    const modalPeriod = document.getElementById('modalPeriod');
+    const modalLength = document.getElementById('modalLength');
+    const modalWeight = document.getElementById('modalWeight');
+    const modalDescription = document.getElementById('modalDescription');
 
     async function loadDinos(url = API) {
         try {
@@ -348,10 +517,12 @@
                 <p>📅 ${d.period || '—'}</p>
                 <p>📏 ${d.length_min || '?'} — ${d.length_max || '?'} м</p>
                 <p>⚖️ ${d.weight_min || '?'} — ${d.weight_max || '?'} кг</p>
+                ${d.description ? `<p class="description">${d.description}</p>` : ''}
                 <div class="card-actions">
                     <button class="btn-edit" onclick="editDino(${d.id})">✏️</button>
                     <button class="btn-delete" onclick="deleteDino(${d.id})">🗑️</button>
                     <button class="btn-image" onclick="uploadImage(${d.id})">🖼️</button>
+                    <button class="btn-view" onclick="openModal(${d.id})">👁️</button>
                 </div>
                 <div id="upload-${d.id}" style="margin-top:6px;display:none;">
                     <input type="file" accept="image/*" onchange="uploadFile(${d.id}, this)" />
@@ -373,6 +544,7 @@
                 fLMax.value = d.length_max || '';
                 fWMin.value = d.weight_min || '';
                 fWMax.value = d.weight_max || '';
+                fDescription.value = d.description || '';
                 formCard.classList.add('open');
                 showFormBtn.textContent = '✏️ Редактировать';
             });
@@ -402,7 +574,7 @@
         if (!fName.value.trim()) {
             alert("⚠️ Имя обязательно");
             return;
-}
+        }
         const payload = {
             name: fName.value,
             latin_name: fLatin_name.value || null,
@@ -412,19 +584,25 @@
             length_max: parseFloat(fLMax.value) || null,
             weight_min: parseFloat(fWMin.value) || null,
             weight_max: parseFloat(fWMax.value) || null,
+            description: fDescription.value || null
         };
 
         const url = editingId ? `${API}/${editingId}` : API;
         const method = editingId ? 'PUT' : 'POST';
 
-        await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        resetForm();
-        loadDinos();
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Ошибка сохранения');
+            resetForm();
+            loadDinos();
+        } catch (e) {
+            alert('❌ Не удалось сохранить');
+            console.error(e);
+        }
     }
 
     function resetForm() {
@@ -437,6 +615,7 @@
         fLMax.value = '';
         fWMin.value = '';
         fWMax.value = '';
+        fDescription.value = '';
         formCard.classList.remove('open');
         showFormBtn.textContent = '➕ Добавить';
     }
@@ -451,6 +630,60 @@
         if (params.toString()) url += '/search?' + params.toString();
         loadDinos(url);
     }
+
+    // Функция открытия модального окна
+    function openModal(id) {
+        fetch(`${API}/${id}`)
+            .then(r => r.json())
+            .then(d => {
+                modalTitle.textContent = d.name || 'Динозавр';
+                modalImage.src = d.image_url || 'https://via.placeholder.com/300x150?text=🦕';
+                modalImage.alt = d.name || 'Динозавр';
+                modalLatin.textContent = d.latin_name || '—';
+                modalDiet.textContent = d.diet || '—';
+                modalPeriod.textContent = d.period || '—';
+                modalLength.textContent = `${d.length_min || '?'} — ${d.length_max || '?'} м`;
+                modalWeight.textContent = `${d.weight_min || '?'} — ${d.weight_max || '?'} кг`;
+                modalDescription.textContent = d.description || 'Описание отсутствует';
+                if (!d.description) {
+                    modalDescription.style.color = '#999';
+                    modalDescription.style.fontStyle = 'italic';
+                } else {
+                    modalDescription.style.color = '#2c3e50';
+                    modalDescription.style.fontStyle = 'normal';
+                }
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            })
+            .catch(e => {
+                alert('Не удалось загрузить данные');
+                console.error(e);
+            });
+    }
+
+    // Функция закрытия модального окна
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Закрытие по кнопкам
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalCloseBtn2.addEventListener('click', closeModal);
+
+    // Закрытие по клику на фон
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeModal();
+        }
+    });
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+            closeModal();
+        }
+    });
 
     searchBtn.addEventListener('click', applyFilters);
     resetBtn.addEventListener('click', () => {
