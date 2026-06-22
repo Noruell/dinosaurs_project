@@ -354,6 +354,3 @@ async def upload_dinosaur_image(
         "message": "Изображение загружено", 
         "image_url": image_url
     }
-@app.get("/favicon.ico")
-async def favicon():
-    return FileResponse("static/images/dino_icon.png")
