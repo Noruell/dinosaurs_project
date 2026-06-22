@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import os
 import aiofiles
 from pathlib import Path
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.staticfiles import StaticFiles
@@ -354,3 +354,6 @@ async def upload_dinosaur_image(
         "message": "Изображение загружено", 
         "image_url": image_url
     }
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/images/dino-icon.png")
