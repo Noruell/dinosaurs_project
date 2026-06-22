@@ -65,12 +65,12 @@ async def search_dinosaur(
     params = {}
     
     if search:
-        query += " AND name LIKE :search"
+        query += " AND name ILIKE :search"
         params["search"] = f"%{search}%"
 
     if period:
-        query += " AND period = :period"
-        params["period"] = period
+        query += " AND period ILIKE :period"
+        params["period"] = f"%{period}%"
 
     if search:
         query += " ORDER BY similarity(name, :search_sim) DESC"
@@ -113,8 +113,8 @@ async def filter_dinosaurs(
     params = {}
 
     if period:
-        query += " AND period = :period"
-        params["period"] = period
+        query += " AND period ILIKE :period"
+        params["period"] = f"%{period}%"
 
     if length_from is not None:
         query += " AND length_max >= :length_from"
