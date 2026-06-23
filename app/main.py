@@ -236,15 +236,14 @@ async def create_dinosaur(
 
     return new_dino
 
-# Обноавить полностью данные о динозавре
+# Обновить динозавра
 @app.put("/dinosaurs/{id}")
 async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text
-                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
-                               image_url, latin_name, diet, description, created_at, updated_at 
-                               FROM dinosaurs WHERE id = :id"""),
-                              {"id": id}
-                              )
+    result = await db.execute(text("""
+        SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+               image_url, latin_name, diet, description, created_at, updated_at 
+        FROM dinosaurs WHERE id = :id
+    """), {"id": id})
     row = result.fetchone()
 
     if not row:
@@ -258,15 +257,14 @@ async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Dep
         await db.execute(text(query), {**update_data, "id": id})
         await db.commit()
 
-    result = await db.execute(text
-                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
-                               image_url, latin_name, diet, description, created_at, updated_at 
-                               FROM dinosaurs WHERE id = :id"""),
-                              {"id": id}
-                              )
-    rows = result.fetchone()
+    result = await db.execute(text("""
+        SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
+               image_url, latin_name, diet, description, created_at, updated_at 
+        FROM dinosaurs WHERE id = :id
+    """), {"id": id})
+    row = result.fetchone()
+
     return {
-        {
         "id": row[0],
         "name": row[1],
         "period": row[2],
@@ -280,9 +278,8 @@ async def put_dinosaur(id: int, dino_upd: DinosaurUpdate, db: AsyncSession = Dep
         "description": row[10],
         "created_at": row[11],
         "updated_at": row[12]
-        }
-        for row in rows
     }
+
 # Удалить динозавра
 @app.delete("/dinosaurs/{id}")
 async def delete_dinosaur(id: int, db: AsyncSession = Depends(get_db)):
@@ -296,9 +293,7 @@ async def delete_dinosaur(id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Динозавр не найден")
     
     await db.execute(text
-                              ("""SELECT id, name, period, length_min, length_max, weight_min, weight_max, 
-                               image_url, latin_name, diet, description, created_at, updated_at 
-                               FROM dinosaurs WHERE id = :id"""),
+                              ("""DELETE FROM dinosaurs WHERE id = :id"""),
                               {"id": id}
                               )
     await db.commit()
