@@ -132,6 +132,12 @@
         .form-card button:hover {
             background: #ABD97E;
         }
+        .form-card button#cancelFormBtn {
+            background: #e74c3c;
+        }
+        .form-card button#cancelFormBtn:hover {
+            background: #d43726;
+        }
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -267,13 +273,13 @@
             margin: 2px 0;
         }
 
-        .diet-хищник {
+        .diet-Хищник {
             color: #e74c3c;
         }
-        .diet-травоядный {
+        .diet-Травоядный {
             color: #27ae60;
         }
-        .diet-всеядный {
+        .diet-Всеядный {
             color: #f39c12;
         }
 
@@ -385,6 +391,14 @@
         .modal-footer .btn-close-modal:hover {
             background: #d43726;
         }
+        .error-message {
+            background: #fde8e8;
+            color: #e74c3c;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -403,6 +417,8 @@
         <button id="resetBtn">Сбросить</button>
         <button id="showFormBtn">➕ Добавить</button>
     </div>
+
+    <div id="errorContainer"></div>
 
     <div class="form-card" id="formCard">
         <label>Имя <input id="fName" placeholder="Теризинозавр" /></label>
@@ -466,6 +482,7 @@
     const cancelFormBtn = document.getElementById('cancelFormBtn');
     const saveBtn = document.getElementById('saveBtn');
     const formCard = document.getElementById('formCard');
+    const errorContainer = document.getElementById('errorContainer');
 
     const fName = document.getElementById('fName');
     const fLatin_name = document.getElementById('fLatin_name');
@@ -490,6 +507,13 @@
     const modalWeight = document.getElementById('modalWeight');
     const modalDescription = document.getElementById('modalDescription');
 
+    function showError(message) {
+        errorContainer.innerHTML = `<div class="error-message">❌ ${message}</div>`;
+        setTimeout(() => {
+            errorContainer.innerHTML = '';
+        }, 5000);
+    }
+
     async function loadDinos(url = API) {
         try {
             const res = await fetch(url);
@@ -498,19 +522,20 @@
             renderDinos(data);
         } catch (e) {
             grid.innerHTML = '<p>⚠️ Не удалось загрузить динозавриков</p>';
+            showError('Не удалось загрузить динозавриков');
         }
     }
 
     function renderDinos(dinos) {
-        console.log("📦 Данные с сервера:", dinos);  // <-- посмотри в консоли браузера
+        console.log("📦 Данные с сервера:", dinos);
 
-        if (!dinos.length) {
+        if (!dinos || !dinos.length) {
             grid.innerHTML = '<p>🦕 Ничего не найдено</p>';
             return;
         }
         grid.innerHTML = dinos.map(d => `
             <div class="card">
-                <img src="${d.image_url || 'https://via.placeholder.com/300x150?text=🦕'}" alt="${d.name}" />
+                <img src="${d.image_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22150%22%3E%3Crect width=%22300%22 height=%22150%22 fill=%22%234c6b57%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2230%22%3E🦕%3C/text%3E%3C/svg%3E'}" alt="${d.name}" />
                 <h3>${d.name}</h3>
                 ${d.latin_name ? `<p class="latin-name">${d.latin_name}</p>` : ''}
                 ${d.diet ? `<p class="diet diet-${d.diet}">🍽️ ${d.diet}</p>` : ''}
@@ -534,7 +559,10 @@
     function editDino(id) {
         editingId = id;
         fetch(`${API}/${id}`)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Динозавр не найден');
+                return r.json();
+            })
             .then(d => {
                 fName.value = d.name || '';
                 fLatin_name.value = d.latin_name || '';
@@ -547,13 +575,28 @@
                 fDescription.value = d.description || '';
                 formCard.classList.add('open');
                 showFormBtn.textContent = '✏️ Редактировать';
+                errorContainer.innerHTML = '';
+            })
+            .catch(e => {
+                showError('Не удалось загрузить данные для редактирования');
+                console.error(e);
             });
     }
 
     async function deleteDino(id) {
         if (!confirm('Удалить динозавра?')) return;
-        await fetch(`${API}/${id}`, { method: 'DELETE' });
-        loadDinos();
+        try {
+            const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || 'Ошибка удаления');
+            }
+            loadDinos();
+            showError('✅ Динозавр удален!');
+        } catch (e) {
+            showError('Не удалось удалить динозавра: ' + e.message);
+            console.error(e);
+        }
     }
 
     function uploadImage(id) {
@@ -564,27 +607,35 @@
     async function uploadFile(id, input) {
         const file = input.files[0];
         if (!file) return;
-        const formData = new FormData();
-        formData.append('file', file);
-        await fetch(`${API}/${id}/image`, { method: 'POST', body: formData });
-        loadDinos();
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch(`${API}/${id}/image`, { method: 'POST', body: formData });
+            if (!res.ok) throw new Error('Ошибка загрузки изображения');
+            loadDinos();
+            showError('✅ Изображение загружено!');
+        } catch (e) {
+            showError('Не удалось загрузить изображение');
+            console.error(e);
+        }
     }
 
     async function saveDino() {
         if (!fName.value.trim()) {
-            alert("⚠️ Имя обязательно");
+            showError('⚠️ Имя обязательно');
             return;
         }
+
         const payload = {
-            name: fName.value,
-            latin_name: fLatin_name.value || null,
+            name: fName.value.trim(),
+            latin_name: fLatin_name.value.trim() || null,
             diet: fDiet.value || null,
-            period: fPeriod.value || null,
+            period: fPeriod.value.trim() || null,
             length_min: parseFloat(fLMin.value) || null,
             length_max: parseFloat(fLMax.value) || null,
             weight_min: parseFloat(fWMin.value) || null,
             weight_max: parseFloat(fWMax.value) || null,
-            description: fDescription.value || null
+            description: fDescription.value.trim() || null
         };
 
         const url = editingId ? `${API}/${editingId}` : API;
@@ -596,12 +647,18 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error('Ошибка сохранения');
+            
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Ошибка сохранения');
+            }
+            
             resetForm();
             loadDinos();
+            showError('✅ Динозавр сохранен!');
         } catch (e) {
-            // alert('❌ Не удалось сохранить');
-            console.error(e);
+            showError('❌ Не удалось сохранить: ' + e.message);
+            console.error('Ошибка сохранения:', e);
         }
     }
 
@@ -618,6 +675,7 @@
         fDescription.value = '';
         formCard.classList.remove('open');
         showFormBtn.textContent = '➕ Добавить';
+        errorContainer.innerHTML = '';
     }
 
     function applyFilters() {
@@ -631,13 +689,15 @@
         loadDinos(url);
     }
 
-    // Функция открытия модального окна
     function openModal(id) {
         fetch(`${API}/${id}`)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Данные не найдены');
+                return r.json();
+            })
             .then(d => {
                 modalTitle.textContent = d.name || 'Динозавр';
-                modalImage.src = d.image_url || 'https://via.placeholder.com/300x150?text=🦕';
+                modalImage.src = d.image_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22150%22%3E%3Crect width=%22300%22 height=%22150%22 fill=%22%234c6b57%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22central%22 font-size=%2230%22%3E🦕%3C/text%3E%3C/svg%3E';
                 modalImage.alt = d.name || 'Динозавр';
                 modalLatin.textContent = d.latin_name || '—';
                 modalDiet.textContent = d.diet || '—';
@@ -656,12 +716,11 @@
                 document.body.style.overflow = 'hidden';
             })
             .catch(e => {
-                alert('Не удалось загрузить данные');
+                showError('Не удалось загрузить данные');
                 console.error(e);
             });
     }
 
-    // Функция закрытия модального окна
     function closeModal() {
         modalOverlay.classList.remove('active');
         document.body.style.overflow = '';
@@ -686,10 +745,12 @@
     });
 
     searchBtn.addEventListener('click', applyFilters);
+    
     resetBtn.addEventListener('click', () => {
         searchInput.value = '';
         periodFilter.value = '';
         loadDinos();
+        errorContainer.innerHTML = '';
     });
 
     showFormBtn.addEventListener('click', () => {
