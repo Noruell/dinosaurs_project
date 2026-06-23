@@ -527,12 +527,16 @@
     async function loadDinos(url = API) {
         try {
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Ошибка загрузки');
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Ошибка загрузки: ${res.status} - ${errorText}`);
+            }
             const data = await res.json();
             renderDinos(data);
         } catch (e) {
-            grid.innerHTML = '<p>⚠️ Не удалось загрузить динозавриков</p>';
-            showMessage('Не удалось загрузить динозавриков');
+            console.error('Ошибка загрузки:', e);
+            grid.innerHTML = `<p>⚠️ Не удалось загрузить динозавриков: ${e.message}</p>`;
+            showMessage('Не удалось загрузить динозавриков: ' + e.message);
         }
     }
 
@@ -601,7 +605,7 @@
             
             if (res.status === 404) {
                 showMessage('Динозавр уже был удален');
-                loadDinos();
+                await loadDinos();
                 return;
             }
             
@@ -610,11 +614,20 @@
                 throw new Error(text || 'Ошибка удаления');
             }
             
+            const result = await res.json();
+            console.log('Удаление успешно:', result);
+            
             showMessage('✅ Динозавр удален!', 'success');
-            loadDinos();
+            
+            // Важно: перезагружаем данные после успешного удаления
+            await loadDinos();
+            
         } catch (e) {
             showMessage('❌ Не удалось удалить динозавра: ' + e.message);
-            console.error(e);
+            console.error('Ошибка удаления:', e);
+            
+            // Пробуем перезагрузить данные в любом случае
+            loadDinos();
         }
     }
 
@@ -626,16 +639,38 @@
     async function uploadFile(id, input) {
         const file = input.files[0];
         if (!file) return;
+        
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const res = await fetch(`${API}/${id}/image`, { method: 'POST', body: formData });
-            if (!res.ok) throw new Error('Ошибка загрузки изображения');
+            
+            const res = await fetch(`${API}/${id}/image`, { 
+                method: 'POST', 
+                body: formData 
+            });
+            
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Ошибка загрузки изображения');
+            }
+            
+            const result = await res.json();
+            console.log('Изображение загружено:', result);
+            
             showMessage('✅ Изображение загружено!', 'success');
-            loadDinos();
+            
+            // Перезагружаем данные после загрузки изображения
+            await loadDinos();
+            
+            // Скрываем форму загрузки
+            const uploadEl = document.getElementById(`upload-${id}`);
+            if (uploadEl) {
+                uploadEl.style.display = 'none';
+            }
+            
         } catch (e) {
-            showMessage('❌ Не удалось загрузить изображение');
-            console.error(e);
+            showMessage('❌ Не удалось загрузить изображение: ' + e.message);
+            console.error('Ошибка загрузки изображения:', e);
         }
     }
 
@@ -670,7 +705,7 @@
             if (res.status === 404) {
                 showMessage('❌ Динозавр не найден. Возможно, он уже был удален.');
                 resetForm();
-                loadDinos();
+                await loadDinos();
                 return;
             }
             
@@ -684,17 +719,16 @@
             
             resetForm();
             showMessage('✅ Динозавр сохранен!', 'success');
-            loadDinos();
-        } catch (e) {
-            // Даже если ошибка, пробуем обновить данные
-            showMessage('❌ Ошибка при сохранении, но данные могут быть обновлены. Перезагружаем...');
-            console.error('Ошибка сохранения:', e);
             
-            // В любом случае перезагружаем данные
-            setTimeout(() => {
-                resetForm();
-                loadDinos();
-            }, 1000);
+            // Важно: перезагружаем данные после успешного сохранения
+            await loadDinos();
+            
+        } catch (e) {
+            console.error('Ошибка сохранения:', e);
+            showMessage('❌ Ошибка при сохранении. Проверьте данные и попробуйте снова.');
+            
+            // Перезагружаем данные, чтобы показать актуальное состояние
+            loadDinos();
         }
     }
 
@@ -814,6 +848,7 @@
     cancelFormBtn.addEventListener('click', resetForm);
     saveBtn.addEventListener('click', saveDino);
 
+    // Загружаем данные при старте
     loadDinos();
 </script>
 </body>
